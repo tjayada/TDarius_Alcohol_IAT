@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Tjark's Alcohol IAT</title>
+
+        <script src="jspsych-6/jspsych.js"></script>
+        <script src="jspsych-6/plugins/jspsych-html-keyboard-response.js"></script>
+        <script src="jspsych-6/plugins/jspsych-iat-html.js"></script>
+        <script src="jspsych-6/plugins/jspsych-survey-multi-choice.js"></script>
+        <link href="jspsych-6/css/jspsych.css" rel="stylesheet" type="text/css">
+    </head>
+    <body></body>
+
+    <script>
+    // ABOVE: include jspsych plugins like "keyboard response" to use in the code
+
+
+    // create an empty time line which gets filled with each "push"
+    // the order of push's defines the order of the experiment
+    var timeline = [];
+
+    // create a welcome page which greets the participant and explains
+    // what this experiment is about. In this keyboard response and every
+    // other following keyboard response is the "space"-key used to
+    // get to the next "page"
+    // there is also a "post trial gap" of 1000 which results in
+    // a 1 second pause between this and the next page
+    // so it doesnt feel to fast/overwhelming for the participant
+    var welcome = {
+      type : "html-keyboard-response",
+      stimulus :"<div style='position: relative; top: 10%;'><p style='font-size: 48px'> Welcome to the Experiment ! <br><br></p></div>" +
+                'This project is part of my Applied Neuroscience course and I am happy that you are here. <br>' +
+                'During the experiment you will be asked to sort words ' +
+                'into corresponding categories as fast as you can. ' +
+                '<p>This procedure is called an Implicit Association Test (IAT).</p>' +
+                '<p>This IAT is made especially for finding out if you <strong>implicitly associate yourself with being a drinker</strong>.</p>' +
+                '<p style="font-size: 20px">Press "Space" to continue.</p>',
+      choices: ['space'],
+      post_trial_gap: 1000
+    };
+    // after the push to timeline our welcome page is the first thing that the
+    // participant will see
+    timeline.push(welcome);
+
+    // this keyboard response explains the different categories (me, not me, drinker, non-drinker)
+    // <div style = ...> is used to position the texts at certain locations
+    // if we dont do this, all the text would be in the center which does not
+    // look too good and is later actually needed for the experiment to
+    // position certain stimuli either left or right of the center
+    // <strong> makes the text inbetween BOLD and <br> creats a new line
+    var experiment_explanation = {
+    type: 'html-keyboard-response',
+    stimulus: "<div style='position: absolute; top: 15%; left: 20%'> <p>Next, you will use the '<strong>E</strong>' and '<strong>I</strong>' computer keys to categorize items into groups as fast as you can.</p></div>" +
+    "<div style='position: absolute; top: 20%; left: 20%'> <p>These are the four groups and the items that belong to each:<br><br></p></div>" +
+
+    '<div style="position: absolute;top: 30%; left: 30%; text-align:left"> <p><strong>DRINKER</strong>: Drinker, Partier, Drunk, Drink <br></p>' +
+    '<p><strong>NON-DRINKER</strong>: Non-Drinker, Abstainer, Sober, Abstain <br><br></p>' +
+
+    '<p><strong>ME</strong>: Me, I, Myself, Self <br></p>' +
+    '<p><strong>NOT ME</strong>: Him, Other, Her, Them <br><br></p></div>' +
+
+    "<div style='position: absolute; top: 65%; left: 20%'> <p>There are seven parts. The instructions change for each part. Pay attention!</p></div>" +
+    "<div style='position: absolute; top: 75%; left: 20%'> <p>Press 'Space' continue.</p></div>",
+    choices: ['space'],
+    post_trial_gap: 1000
+    };
+    timeline.push(experiment_explanation);
+
+
+    //--------------------------------------------------------------------------
+    // Task 1
+
+    // the instructions for the first trial
+    // tells the participant what to press for drinker or non-drinker
+    // positions "press e and drinker" on the left and "press i and non-drinker"
+    // on the right
+    var instructions_for_task_1 = {
+    type: 'html-keyboard-response',
+    stimulus: "<div style='position: absolute; top: 18%; left: 20%'><p>Press E for:<br><strong>DRINKER</strong></p></div>" +
+    "<div style='position: absolute; top: 18%; right: 20%'><p>Press I for:<br><strong>NON-DRINKER</strong></p></div>" +
+    "<div style='position: relative; top: 42%; margin-left: auto; margin-right: auto'>Put a left finger on the <strong>E</strong> key for items that belong to the DRINKER category. Put a right finger on the " +
+    "<strong>I</strong> key for items that belong to the NON-DRINKER " +
+    "category. Items will appear one at a time.<br><br>" + "If you " +
+    "make a mistake, a red X will appear. Press the keys listed below " +
+    "to continue. Go as fast as you can while being accurate.<br><br> " +
+    "Press 'Space' when you are ready to start.</div>",
+    choices: ['space']
+    };
+    timeline.push(instructions_for_task_1);
+
+    // creates a " + " yt font size 48 for one second and then "moves on"
+    // so the trial does not start right at the moment
+    // that "space" got pressed before at the instructions_block1
+    var fixiation_cross_for_task_1 = {
+    type: 'html-keyboard-response',
+    stimulus: '<p style="font-size: 48px;">+</p>',
+    choices: jsPsych.NO_KEYS,
+    trial_duration: 1000,
+    };
+
+    timeline.push(fixiation_cross_for_task_1);
+
+
+    // the first trial
+    // using the iat plugin from jspsych
+    // "stimulus" and the correct key are defined below at timeline_variables
+    // a red X will be displayed if the wrong key got pressed
+    var task_1 = {
+      timeline: [
+        {
+          type: 'iat-html',
+          stimulus: jsPsych.timelineVariable('stimulus'),
+          stim_key_association: jsPsych.timelineVariable('stim_key_association'),
+          html_when_wrong: '<span style="color: red; font-size: 80px">X</span>',
+          bottom_instructions: '<p>If you press the wrong key, a red X will appear. Press the other key to continue</p>',
+          force_correct_key_press: true, // the trial only moves on after the right key got pressed
+          display_feedback: true, // true -> html_when_wrong gets displayed, if false then moves on after certain time passed
+          left_category_key: 'E', // the key E is left and "connected" to DRINKER
+          right_category_key: 'I', // the key I is right and "connected" to NON-DRINKER
+          left_category_label: ['DRINKER'],
+          right_category_label: ['NON-DRINKER'],
+          response_ends_trial: true, // move on after the right key and dont wait for a certain time before moving on
+          data: { iat_type: 'practice' } // practice since only me-drinker and me-non-drinker are the interesting cases
+        }
+      ],
+      // the stimuli and the respective keys in randomized order and with 2 repetitions
+      timeline_variables: [
+        {stimulus: "Drinker", stim_key_association: "left"},
+        {stimulus: "Partier", stim_key_association: "left"},
+        {stimulus: "Drunk", stim_key_association: "left"},
+        {stimulus: "Drink", stim_key_association: "left"},
+
+        {stimulus: "Non-Drinker", stim_key_association: "right"},
+        {stimulus: "Abstainer", stim_key_association: "right"},
+        {stimulus: "Sober", stim_key_association: "right"},
+        {stimulus: "Abstain", stim_key_association: "right"},
+      ],
+      randomize_order: true,
+      repetitions: 2
+    };
+
+    timeline.push(task_1);
+
+
+    //--------------------------------------------------------------------------
+    // Task 2
+
+
+    // like instructions_block1 but with ME and NOT ME instead of DRINKER and NON-DRINKER
+    var instructions_for_task_2 = {
+      type: 'html-keyboard-response',
+      stimulus: "<div style='position: absolute; top: 18%; left: 20%'>Press E for:<br><strong>ME</strong></div>" +
+      "<div style='position: absolute; top: 18%; right: 20%'>Press I for:<br><strong>NOT ME</strong></div>" +
+      "<div style='position: relative; top: 42%; margin-left: auto; margin-right: auto'>Put a left finger on the <strong>E</strong> key for items that " +
+      "belong to the ME category. Put a right finger on the " +
+      "<strong>I</strong> key for items that belong to the NOT ME " +
+      "category. Items will appear one at a time.<br><br>" + "If you " +
+      "make a mistake, a red X will appear. Press the keys listed below " +
+      "to continue. Go as fast as you can while being accurate.<br><br> " +
+      "Press 'Space' when you are ready to start.</div>",
+      choices: ['space']
+    };
+    timeline.push(instructions_for_task_2);
+
+    // like trial_fix_1
+    // could have just pushed again but this makes the code more
+    // easy to read
+    var fixiation_cross_for_task_2 = {
+    type: 'html-keyboard-response',
+    stimulus: '<p style="font-size: 48px;">+</p>',
+    choices: jsPsych.NO_KEYS,
+    trial_duration: 1000,
+    };
+    timeline.push(fixiation_cross_for_task_2);
+
+    // like trial_block1 but with ME and NOT ME instead of DRINKER and NON-DRINKER
+    var task_2 = {
+      timeline: [
+        {
+          type: 'iat-html',
+          stimulus: jsPsych.timelineVariable('stimulus'),
+          stim_key_association: jsPsych.timelineVariable('stim_key_association'),
+          html_when_wrong: '<span style="color: red; font-size: 80px">X</span>',
+          bottom_instructions: '<p>If you press the wrong key, a red X will appear. Press the other key to continue</p>',
+          force_correct_key_press: true,
+          display_feedback: true,
+          left_category_key: 'E',
+          right_category_key: 'I',
+          left_category_label: ['ME'],
+          right_category_label: ['NOT ME'],
+          response_ends_trial: true,
+          data: { iat_type: 'practice' }
+        }
+      ],
+      timeline_variables: [
+        {stimulus: "Me", stim_key_association: "left"},
+        {stimulus: "Self", stim_key_association: "left"},
+        {stimulus: "I", stim_key_association: "left"},
+        {stimulus: "My", stim_key_association: "left"},
+
+        {stimulus: "Other", stim_key_association: "right"},
+        {stimulus: "Him", stim_key_association: "right"},
+        {stimulus: "Her", stim_key_association: "right"},
+        {stimulus: "Them", stim_key_association: "right"}
+      ],
+      randomize_order: true,
+      repetitions: 2
+    };
+
+    timeline.push(task_2);
+
+
+    //--------------------------------------------------------------------------
+    // Task 3
+
+    // from now on the pattern continues
+    //
+    // instructions_block -> trial_fix -> trial_block
+    //
+    // just the categories switch from trial to trial
+
+    // ME and DRINKER or NOT ME and NON-DRINKER
+    var instructions_for_task_3 = {
+      type: 'html-keyboard-response',
+      stimulus: "<div style='position: absolute; top: 18%; left: 20%'>Press E for:<br> " +
+      "<strong>ME</strong><br>" + "or<br>" + "<strong>DRINKER</strong></div>" + "<div style='position: absolute; top: 18%; right: 20%'>" +
+      "Press I for:<br>" + "<strong>NOT ME</strong><br>" + "or<br>" + "<strong>NON-DRINKER</strong></div>" +
+      "<div style='position: relative; top: 42%; margin-left: auto; margin-right: auto'>Use <strong>E</strong> for ME and for " +
+      "DRINKER <br>" + "Use <strong>I</strong> for NOT ME and for NON-DRINKER<br>" +
+      "Each item belongs to only one category.<br><br>" + "If you " +
+      "make a mistake, a red X will appear. Press the keys listed below " +
+      "to continue. Go as fast as you can while being accurate.<br><br> " +
+      "Press 'Space' when you are ready to start.</div>",
+      choices: ['space']
+    };
+    timeline.push(instructions_for_task_3);
+
+    var fixiation_cross_for_task_3 = {
+    type: 'html-keyboard-response',
+    stimulus: '<p style="font-size: 48px;">+</p>',
+    choices: jsPsych.NO_KEYS,
+    trial_duration: 1000,
+    };
+
+    timeline.push(fixiation_cross_for_task_3);
+
+    // ME and DRINKER or NOT ME and NON-DRINKER
+    var task_3 = {
+      timeline: [
+        {
+          type: 'iat-html',
+          stimulus: jsPsych.timelineVariable('stimulus'),
+          stim_key_association: jsPsych.timelineVariable('stim_key_association'),
+          html_when_wrong: '<span style="color: red; font-size: 80px">X</span>',
+          bottom_instructions: '<p>If you press the wrong key, a red X will appear. Press the other key to continue</p>',
+          force_correct_key_press: true,
+          display_feedback: true,
+          left_category_key: 'E',
+          right_category_key: 'I',
+          left_category_label: ['ME', 'DRINKER'],
+          right_category_label: ['NOT ME', 'NON-DRINKER'],
+          response_ends_trial: true,
+          data: { iat_type: 'practice' }
+        }
+      ],
+      timeline_variables: [
+        {stimulus: "Me", stim_key_association: "left"},
+        {stimulus: "Self", stim_key_association: "left"},
+        {stimulus: "I", stim_key_association: "left"},
+        {stimulus: "My", stim_key_association: "left"},
+
+        {stimulus: "Other", stim_key_association: "right"},
+        {stimulus: "Him", stim_key_association: "right"},
+        {stimulus: "Her", stim_key_association: "right"},
+        {stimulus: "Them", stim_key_association: "right"},
+
+
+        {stimulus: "Drinker", stim_key_association: "left"},
+        {stimulus: "Partier", stim_key_association: "left"},
+        {stimulus: "Drunk", stim_key_association: "left"},
+        {stimulus: "Drink", stim_key_association: "left"},
+
+        {stimulus: "Non-Drinker", stim_key_association: "right"},
+        {stimulus: "Abstainer", stim_key_association: "right"},
+        {stimulus: "Sober", stim_key_association: "right"},
+        {stimulus: "Abstain", stim_key_association: "right"},
+      ],
+      randomize_order: true,
+      repetitions: 1
+    };
+    timeline.push(task_3);
+
+
+    //--------------------------------------------------------------------------
+    // Task 4
+
+    // Again ME and DRINKER or NOT ME and NON-DRINKER
+    // but this data gets recorded
+    var instructions_for_task_4 = {
+      type: 'html-keyboard-response',
+      stimulus: "<div style='position: absolute; top: 18%; left: 20%'>Press E for:<br> " +
+      "<strong>ME</strong><br>" + "or<br>" + "<strong>DRINKER</strong></div>" + "<div style='position: absolute; top: 18%; right: 20%'>" +
+      "Press I for:<br>" + "<strong>NOT ME</strong><br>" + "or<br>" + "<strong>NON-DRINKER</strong></div>" +
+      "<div style='position: relative; top: 42%; margin-left: auto; margin-right: auto'>This is the same as the previous part.<br>" + "Use <strong>E</strong> for ME and for " +
+      "DRINKER<br>" + "Use <strong>I</strong> for NOT ME and for NON-DRINKER<br>" +
+      "Each item belongs to only one category.<br><br>" + "If you " +
+      "make a mistake, a red X will appear. Press the keys listed below " +
+      "to continue. Go as fast as you can while being accurate.<br><br> " +
+      "Press 'Space' when you are ready to start.</div>",
+      choices: ['space']
+    };
+    timeline.push(instructions_for_task_4);
+
+    var fixiation_cross_for_task_4 = {
+    type: 'html-keyboard-response',
+    stimulus: '<p style="font-size: 48px;">+</p>',
+    choices: jsPsych.NO_KEYS,
+    trial_duration: 1000,
+    };
+
+    timeline.push(fixiation_cross_for_task_4);
+
+    // Again ME and DRINKER or NOT ME and NON-DRINKER
+    // but this data gets recorded
+    var task_4 = {
+      timeline: [
+        {
+          type: 'iat-html',
+          is_html: jsPsych.timelineVariable('is_html'),
+          stimulus: jsPsych.timelineVariable('stimulus'),
+          stim_key_association: jsPsych.timelineVariable('stim_key_association'),
+          html_when_wrong: '<span style="color: red; font-size: 80px">X</span>',
+          bottom_instructions: '<p>If you press the wrong key, a red X will appear. Press the other key to continue</p>',
+          force_correct_key_press: true,
+          display_feedback: true,
+          left_category_key: 'E',
+          right_category_key: 'I',
+          left_category_label: ['ME', 'DRINKER'],
+          right_category_label: ['NOT ME', 'NON-DRINKER'],
+          response_ends_trial: true,
+          data: { iat_type: 'me-drinker' } // the date gets saved as me-drinker and later used for the result
+        }
+      ],
+      timeline_variables: [
+        {stimulus: "Me", stim_key_association: "left"},
+        {stimulus: "Self", stim_key_association: "left"},
+        {stimulus: "I", stim_key_association: "left"},
+        {stimulus: "My", stim_key_association: "left"},
+
+        {stimulus: "Other", stim_key_association: "right"},
+        {stimulus: "Him", stim_key_association: "right"},
+        {stimulus: "Her", stim_key_association: "right"},
+        {stimulus: "Them", stim_key_association: "right"},
+
+
+        {stimulus: "Drinker", stim_key_association: "left"},
+        {stimulus: "Partier", stim_key_association: "left"},
+        {stimulus: "Drunk", stim_key_association: "left"},
+        {stimulus: "Drink", stim_key_association: "left"},
+
+        {stimulus: "Non-Drinker", stim_key_association: "right"},
+        {stimulus: "Abstainer", stim_key_association: "right"},
+        {stimulus: "Sober", stim_key_association: "right"},
+        {stimulus: "Abstain", stim_key_association: "right"},
+      ],
+      randomize_order: true,
+      repetitions: 2
+    };
+    timeline.push(task_4);
+
+
+    //--------------------------------------------------------------------------
+    // Task 5
+
+    // Change to NON-DRINKER or DRINKER
+    var instructions_for_task_5 = {
+      type: 'html-keyboard-response',
+      stimulus: "<div style='position: absolute; top: 18%; left: 20%'>Press E for:<br>" + "<strong>NON-DRINKER</strong></div>" +
+      "<div style='position: absolute; top: 18%; right: 20%'>Press I for:<br>" + "<strong>DRINKER</strong></div>" +
+      "<div style='position: relative; top: 42%; margin-left: auto; margin-right: auto'>Watch out, the labels have changed positions!<br>" +
+      "Use <strong>E</strong> for NON-DRINKER<br>" + "Use <strong>I</strong> for DRINKER<br><br>" +
+      "If you make a mistake, a red X will appear. Press the keys listed below " +
+      "to continue. Go as fast as you can while being accurate.<br><br> " +
+      "Press 'Space' when you are ready to start.</div>",
+      choices: ['space']
+    };
+    timeline.push(instructions_for_task_5);
+
+    var fixiation_cross_for_task_5 = {
+    type: 'html-keyboard-response',
+    stimulus: '<p style="font-size: 48px;">+</p>',
+    choices: jsPsych.NO_KEYS,
+    trial_duration: 1000,
+    };
+    timeline.push(fixiation_cross_for_task_5);
+
+    // NON-Drinker or DRINKER
+    var task_5 = {
+      timeline: [
+        {
+          type: 'iat-html',
+          stimulus: jsPsych.timelineVariable('stimulus'),
+          stim_key_association: jsPsych.timelineVariable('stim_key_association'),
+          html_when_wrong: '<span style="color: red; font-size: 80px">X</span>',
+          bottom_instructions: '<p>If you press the wrong key, a red X will appear. Press the other key to continue</p>',
+          force_correct_key_press: true,
+          display_feedback: true,
+          left_category_key: 'E',
+          right_category_key: 'I',
+          left_category_label: ['NON-DRINKER'],
+          right_category_label: ['DRINKER'],
+          response_ends_trial: true,
+          data: { iat_type: 'practice' }
+        }
+      ],
+      timeline_variables: [
+        {stimulus: "Non-Drinker", stim_key_association: "left"},
+        {stimulus: "Abstainer", stim_key_association: "left"},
+        {stimulus: "Sober", stim_key_association: "left"},
+        {stimulus: "Abstain", stim_key_association: "left"},
+
+        {stimulus: "Drinker", stim_key_association: "right"},
+        {stimulus: "Partier", stim_key_association: "right"},
+        {stimulus: "Drunk", stim_key_association: "right"},
+        {stimulus: "Drink", stim_key_association: "right"},
+      ],
+      randomize_order: true,
+      repetitions: 2
+    };
+    timeline.push(task_5);
+
+
+    //--------------------------------------------------------------------------
+    // Task 6
+
+    // ME and NON-DRINKER or NOT ME and DRINKER
+    var instructions_for_task_6 = {
+      type: 'html-keyboard-response',
+      stimulus: "<div style='position: absolute; top: 18%; left: 20%'>Press E for:<br>" + "<strong>ME</strong><br>" + "or<br>" +
+      "<strong>NON-DRINKER</strong></div>" + "<div style='position: absolute; top: 18%; right: 20%'>Press I for:<br>" + "<strong>NOT ME</strong><br>" + "or<br>" +
+      "<strong>DRINKER</strong></div>" +
+      "<div style='position: relative; top: 42%; margin-left: auto; margin-right: auto'>Use <strong>E</strong> for ME and for NON-DRINKER<br>" +
+      "Use <strong>I</strong> for NOT ME and for DRINKER<br><br>" +
+      "If you make a mistake, a red X will appear. Press the keys listed below " +
+      "to continue. Go as fast as you can while being accurate.<br><br> " +
+      "Press 'Space' when you are ready to start.</div>",
+      choices: ['space']
+    };
+    timeline.push(instructions_for_task_6);
+
+    var trial_fix_6 = {
+    type: 'html-keyboard-response',
+    stimulus: '<p style="font-size: 48px;">+</p>',
+    choices: jsPsych.NO_KEYS,
+    trial_duration: 1000,
+    };
+    timeline.push(trial_fix_6);
+
+    // ME and NON-DRINKER or NOT ME and DRINKER
+    var trial_block6 = {
+      timeline: [
+        {
+          type: 'iat-html',
+          stimulus: jsPsych.timelineVariable('stimulus'),
+          stim_key_association: jsPsych.timelineVariable('stim_key_association'),
+          html_when_wrong: '<span style="color: red; font-size: 80px">X</span>',
+          bottom_instructions: '<p>If you press the wrong key, a red X will appear. Press the other key to continue</p>',
+          force_correct_key_press: true,
+          display_feedback: true,
+          left_category_key: 'E',
+          right_category_key: 'I',
+          left_category_label: ['ME', 'NON-DRINKER'],
+          right_category_label: ['NOT ME', 'DRINKER'],
+          response_ends_trial: true,
+          data: {iat_type: 'practice'}
+        }
+      ],
+      timeline_variables: [
+        {stimulus: "Me", stim_key_association: "left"},
+        {stimulus: "Self", stim_key_association: "left"},
+        {stimulus: "I", stim_key_association: "left"},
+        {stimulus: "My", stim_key_association: "left"},
+
+        {stimulus: "Other", stim_key_association: "right"},
+        {stimulus: "Him", stim_key_association: "right"},
+        {stimulus: "Her", stim_key_association: "right"},
+        {stimulus: "Them", stim_key_association: "right"},
+
+
+        {stimulus: "Drinker", stim_key_association: "right"},
+        {stimulus: "Partier", stim_key_association: "right"},
+        {stimulus: "Drunk", stim_key_association: "right"},
+        {stimulus: "Drink", stim_key_association: "right"},
+
+        {stimulus: "Non-Drinker", stim_key_association: "left"},
+        {stimulus: "Abstainer", stim_key_association: "left"},
+        {stimulus: "Sober", stim_key_association: "left"},
+        {stimulus: "Abstain", stim_key_association: "left"},
+      ],
+      randomize_order: true,
+      repetitions: 1
+    };
+    timeline.push(trial_block6);
+
+
+    //--------------------------------------------------------------------------
+    // Task 7
+
+
+    // Again: ME and NON-DRINKER or NOT ME and DRINKER
+    // this trial gets recorded
+    var instructions_for_task_7 = {
+      type: 'html-keyboard-response',
+      stimulus: "<div style='position: absolute; top: 18%; left: 20%'>Press E for:<br>" + "<strong>ME</strong><br>" + "or<br>" +
+      "<strong>NON-DRINKER</strong></div>" + "<div style='position: absolute; top: 18%; right: 20%'>Press I for:<br>" + "<strong>NOT ME</strong><br>" + "or<br>" +
+      "<strong>DRINKER</strong></div>" +
+      "<div style='position: relative; top: 42%; margin-left: auto; margin-right: auto'>This is the same as the previous part<br>" +
+      "Use <strong>E</strong> for ME and for NON-DRINKER<br>" +
+      "Use <strong>I</strong> for NOT ME and for DRINKER<br>" +
+      "Each item belongs to only one category<br><br>" +
+      "If you make a mistake, a red X will appear. Press the keys listed below " +
+      "to continue. Go as fast as you can while being accurate.<br><br> " +
+      "Press 'Space' when you are ready to start.</div>",
+      choices: ['space']
+    };
+    timeline.push(instructions_for_task_7);
+
+    var fixiation_cross_for_task_7 = {
+    type: 'html-keyboard-response',
+    stimulus: '<p style="font-size: 48px;">+</p>',
+    choices: jsPsych.NO_KEYS,
+    trial_duration: 1000,
+    };
+    timeline.push(instructions_for_task_7);
+
+    // Again: ME and NON-DRINKER or NOT ME and DRINKER
+    // this trial gets recorded as me-non-drinker and used later for the result
+    var task_7 = {
+      timeline: [
+        {
+        type: 'iat-html',
+        is_html: jsPsych.timelineVariable('is_html'),
+        stimulus: jsPsych.timelineVariable('stimulus'),
+        stim_key_association: jsPsych.timelineVariable('stim_key_association'),
+        html_when_wrong: '<span style="color: red; font-size: 80px">X</span>',
+        bottom_instructions: '<p>If you press the wrong key, a red X will appear. Press the other key to continue</p>',
+        force_correct_key_press: true,
+        display_feedback: true,
+        left_category_key: 'E',
+        right_category_key: 'I',
+        left_category_label: ['ME', 'NON-DRINKER'],
+        right_category_label: ['NOT ME', 'DRINKER'],
+        response_ends_trial: true,
+        data: {iat_type: 'me-non-drinker'}
+      }
+      ],
+      timeline_variables: [
+        {stimulus: "Me", stim_key_association: "left"},
+        {stimulus: "Self", stim_key_association: "left"},
+        {stimulus: "I", stim_key_association: "left"},
+        {stimulus: "My", stim_key_association: "left"},
+
+        {stimulus: "Other", stim_key_association: "right"},
+        {stimulus: "Him", stim_key_association: "right"},
+        {stimulus: "Her", stim_key_association: "right"},
+        {stimulus: "Them", stim_key_association: "right"},
+
+
+        {stimulus: "Drinker", stim_key_association: "right"},
+        {stimulus: "Partier", stim_key_association: "right"},
+        {stimulus: "Drunk", stim_key_association: "right"},
+        {stimulus: "Drink", stim_key_association: "right"},
+
+        {stimulus: "Non-Drinker", stim_key_association: "left"},
+        {stimulus: "Abstainer", stim_key_association: "left"},
+        {stimulus: "Sober", stim_key_association: "left"},
+        {stimulus: "Abstain", stim_key_association: "left"},
+      ],
+      randomize_order: true,
+      repetitions: 2
+    };
+    timeline.push(task_7);
+
+
+    //--------------------------------------------------------------------------
+    // Survey Questions
+
+    // The message for the participant that the trials are over
+    // and that a small survey follows
+    var survey_instructions = {
+      type: 'html-keyboard-response',
+      stimulus: "You are done with the tests! <br>" +
+      "Now just a quick survey for the purpose of self refelction, the answers <strong>do not</strong> have an influence on your result! <br><br> " +
+      "Press 'Space' when you are ready.",
+      choices: ['space'],
+      post_trial_gap: 1000
+    };
+    timeline.push(survey_instructions);
+
+    // the answer options for the survey
+    var time_options = ["Never", "Less than monthly", "Monthly", "Weekly", "Daily or almost daily"];
+    var units_options = ["0", "1-2", "3-4", "5-6", "7-9", "More than 9"];
+    var time_year_options = ["No", "Yes, but not in the last year", "Yes, during the last year"];
+
+    // the questions and the corresponding answers as defined above
+    var multi_choice_block_horizontal = {
+      type: 'survey-multi-choice',
+      questions: [
+        {prompt: "<strong>How often do you have a drink containing alcohol?</strong>", options: time_options, required: true, horizontal: true,},
+        {prompt: "<strong>How many drinks of alcohol do you drink on a typical day when you are drinking?</strong>", options: units_options, required: true, horizontal: true},
+        {prompt: "<strong>How often during the last year have you found that you were not able to stop drinking once you started?</strong>", options: time_options, required: true, horizontal: true},
+        {prompt: "<strong>How often during the last year have you failed to do what was normally expected of you because of your drinking?</strong>", options: time_options, required: true, horizontal: true,},
+        {prompt: "<strong>How often during the last year have you been unable to remember what happened the night before because you had been drinking?</strong>", options: time_options, required: true, horizontal: true,},
+        {prompt: "<strong>Has a relative or friend, doctor or other health worker been concerned about your drinking or suggested that you cut down?</strong>", options: time_year_options, required: true, horizontal: true,},
+      ],
+      post_trial_gap: 1000
+    };
+    timeline.push(multi_choice_block_horizontal);
+
+
+    //--------------------------------------------------------------------------
+    // IAT Results
+
+    // this block is quite complex and based largely on the jspsych iat example from github
+    // first we create a function so we can use code like if's and .data.get() to get the saved data from
+    // trial 4 (me-drinker) and trial 7 (me-non-drinker)
+    var present_results = {
+      type: "html-keyboard-response",
+      stimulus: function() {
+        // calculate D-score from https://faculty.washington.edu/agg/pdf/GB&N.JPSP.2003.pdf
+        // first find mean RT
+        var me_drinker = jsPsych.data.get().filter({iat_type: 'me-drinker'}).filterCustom(function(x) { return x.rt < 10000 });
+        var mean_correct_responses_me_drinker = me_drinker.filter({correct: true}).select('rt').mean();
+        var me_non_drinker = jsPsych.data.get().filter({iat_type: 'me-non-drinker'}).filterCustom(function(x) { return x.rt < 10000 });
+        var mean_correct_responses_me_non_drinker = me_non_drinker.filter({correct: true}).select('rt').mean();
+
+        // get overall sd
+        var sd = me_drinker.join(me_drinker).filter({correct: true}).select('rt').sd();
+
+        // "d" = an index of performance that takes into account the difference and the overall level of variability in the responses
+        var d = (mean_correct_responses_me_non_drinker - mean_correct_responses_me_drinker) / sd;
+
+        // "if" to decide which bias will be returned
+        // depends on the magnitude and if d is positive or negative
+        // eiter neutral, slight, moderate or strong bias towards ME and Drinker or ME and NON-DRINKER
+        // the returned text is the same and only differs in the bias
+        if(d > 0){
+          if(d < 0.15){
+            return "<p>You're done! Below is some information about how you performed.</p>"+
+            "<p>When the pairs were ME/NON-DRINKER and NOT ME/DRINKER, it took you an average of <strong>"+Math.floor(mean_correct_responses_me_non_drinker)+"ms</strong> to respond.</p>"+
+            "<p>When the pairs were ME/DRINKER and NOT ME/NON-DRINKER, it took you an average of <strong>"+Math.floor(mean_correct_responses_me_drinker)+"ms</strong> to respond.</p>"+
+            "<p>Your D score, an index of performance that takes into account this difference and the overall level of variability in your responses, is <strong>"+d.toFixed(2)+"</strong></p>"+
+            "<p>The Project Implicit IAT website labels this D score as <strong>NEUTRAL</strong>, so no Implicit Association to either side.";
+          };
+
+          if(d > 0.15 && d < 0.35){
+            return "<p>You're done! Below is some information about how you performed.</p>"+
+            "<p>When the pairs were ME/NON-DRINKER and NOT ME/DRINKER, it took you an average of <strong>"+Math.floor(mean_correct_responses_me_non_drinker)+"ms</strong> to respond.</p>"+
+            "<p>When the pairs were ME/DRINKER and NOT ME/NON-DRINKER, it took you an average of <strong>"+Math.floor(mean_correct_responses_me_drinker)+"ms</strong> to respond.</p>"+
+            "<p>Your D score, an index of performance that takes into account this difference and the overall level of variability in your responses, is <strong>"+d.toFixed(2)+"</strong></p>"+
+            "<p>The Project Implicit IAT website labels this D score as a <strong>SLIGHT</strong> Implicit Association between ME and DRINKER";
+          };
+
+          if(d > 0.35 && d < 0.65){
+            return "<p>You're done! Below is some information about how you performed.</p>"+
+            "<p>When the pairs were ME/NON-DRINKER and NOT ME/DRINKER, it took you an average of <strong>"+Math.floor(mean_correct_responses_me_non_drinker)+"ms</strong> to respond.</p>"+
+            "<p>When the pairs were ME/DRINKER and NOT ME/NON-DRINKER, it took you an average of <strong>"+Math.floor(mean_correct_responses_me_drinker)+"ms</strong> to respond.</p>"+
+            "<p>Your D score, an index of performance that takes into account this difference and the overall level of variability in your responses, is <strong>"+d.toFixed(2)+"</strong></p>"+
+            "<p>The Project Implicit IAT website labels this D score as a <strong>MODERATE</strong> Implicit Association between ME and DRINKER";
+          };
+
+          if(d > 0.65){
+            return "<p>You're done! Below is some information about how you performed.</p>"+
+            "<p>When the pairs were ME/NON-DRINKER and NOT ME/DRINKER, it took you an average of <strong>"+Math.floor(mean_correct_responses_me_non_drinker)+"ms</strong> to respond.</p>"+
+            "<p>When the pairs were ME/DRINKER and NOT ME/NON-DRINKER, it took you an average of <strong>"+Math.floor(mean_correct_responses_me_drinker)+"ms</strong> to respond.</p>"+
+            "<p>Your D score, an index of performance that takes into account this difference and the overall level of variability in your responses, is <strong>"+d.toFixed(2)+"</strong></p>"+
+            "<p>The Project Implicit IAT website labels this D score as a <strong>STRONG</strong> Implicit Association between ME and DRINKER";
+          };
+        };
+
+
+        if(d < 0){
+          if(d > -0.15){
+            return "<p>You're done! Below is some information about how you performed.</p>"+
+            "<p>When the pairs were ME/NON-DRINKER and NOT ME/DRINKER, it took you an average of <strong>"+Math.floor(mean_correct_responses_me_non_drinker)+"ms</strong> to respond.</p>"+
+            "<p>When the pairs were ME/DRINKER and NOT ME/NON-DRINKER, it took you an average of <strong>"+Math.floor(mean_correct_responses_me_drinker)+"ms</strong> to respond.</p>"+
+            "<p>Your D score, an index of performance that takes into account this difference and the overall level of variability in your responses, is <strong>"+d.toFixed(2)+"</strong></p>"+
+            "<p>The Project Implicit IAT website labels this D score as a <strong>NEUTRAL</strong>, so no Implicit Association to either side.";
+          };
+
+          if(d < -0.15 && d > -0.35){
+            return "<p>You're done! Below is some information about how you performed.</p>"+
+            "<p>When the pairs were ME/NON-DRINKER and NOT ME/DRINKER, it took you an average of <strong>"+Math.floor(mean_correct_responses_me_non_drinker)+"ms</strong> to respond.</p>"+
+            "<p>When the pairs were ME/DRINKER and NOT ME/NON-DRINKER, it took you an average of <strong>"+Math.floor(mean_correct_responses_me_drinker)+"ms</strong> to respond.</p>"+
+            "<p>Your D score, an index of performance that takes into account this difference and the overall level of variability in your responses, is <strong>"+d.toFixed(2)+"</strong></p>"+
+            "<p>The Project Implicit IAT website labels this D score as a <strong>SLIGHT</strong> Implicit Association between ME and NON-DRINKER";
+          };
+
+          if(d < -0.35 && d > -0.65){
+            return "<p>You're done! Below is some information about how you performed.</p>"+
+            "<p>When the pairs were ME/NON-DRINKER and NOT ME/DRINKER, it took you an average of <strong>"+Math.floor(mean_correct_responses_me_non_drinker)+"ms</strong> to respond.</p>"+
+            "<p>When the pairs were ME/DRINKER and NOT ME/NON-DRINKER, it took you an average of <strong>"+Math.floor(mean_correct_responses_me_drinker)+"ms</strong> to respond.</p>"+
+            "<p>Your D score, an index of performance that takes into account this difference and the overall level of variability in your responses, is <strong>"+d.toFixed(2)+"</strong></p>"+
+            "<p>The Project Implicit IAT website labels this D score as a <strong>MODERATE</strong> Implicit Association between ME and NON-DRINKER";
+          };
+
+          if(d < -0.65){
+            return "<p>You're done! Below is some information about how you performed.</p>"+
+            "<p>When the pairs were ME/NON-DRINKER and NOT ME/DRINKER, it took you an average of <strong>"+Math.floor(mean_correct_responses_me_non_drinker)+"ms</strong> to respond.</p>"+
+            "<p>When the pairs were ME/DRINKER and NOT ME/NON-DRINKER, it took you an average of <strong>"+Math.floor(mean_correct_responses_me_drinker)+"ms</strong> to respond.</p>"+
+            "<p>Your D score, an index of performance that takes into account this difference and the overall level of variability in your responses, is <strong>"+d.toFixed(2)+"</strong></p>"+
+            "<p>The Project Implicit IAT website labels this D score as a <strong>STRONG</strong> Implicit Association between ME and NON-DRINKER";
+          };
+        };
+      },
+      post_trial_gap: 1000
+    };
+    timeline.push(present_results);
+
+
+    //--------------------------------------------------------------------------
+    // Goodbye Page
+
+    // A nice good bye and thank you for the participant that came so far
+    var bye = {
+      type: 'html-keyboard-response',
+      stimulus: "<strong>Thank you for your participation !</strong> <br><br>"+
+      "Press 'Space' to finish the experiment.",
+      choices: ['space'],
+      post_trial_gap: 1000
+    };
+    timeline.push(bye);
+
+
+    //--------------------------------------------------------------------------
+    // Initialise everything
+
+    // initialise the whole experiment in the order that we pushed through out
+    // the code above
+    // show a progress bar on top of the page as a nice feature
+    // and define that all answers below 300 ms are not valid
+    jsPsych.init({
+      timeline: timeline,
+      show_progress_bar: true,
+      minimum_valid_rt: 300
+    });
+
+    </script>
+</html>
